@@ -274,6 +274,11 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            transition: transform 0.2s;
+        }
+
+        .btn-pdf:hover {
+            transform: translateY(-2px);
         }
 
         /* City Card */
@@ -628,7 +633,7 @@
                             <option value="all">Todas</option>
                         </select>
                         <button class="btn-pdf" onclick="exportPDF()">
-                            ⬇ PDF
+                            🖨️ Imprimir
                         </button>
                     </div>
                 </div>
@@ -900,7 +905,10 @@
                 <div class="analysis-card">
                     <div class="analysis-header">
                         <div class="analysis-title">RS ${data.sr_data.year} en ${data.sr_data.city.short_name || data.sr_data.city.name}</div>
-                        <div class="analysis-score">Score: ${data.evaluation.score}</div>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div class="analysis-score">Score: ${data.evaluation.score}</div>
+                            <button class="btn-pdf" onclick="printAnalysis()">🖨️ Imprimir</button>
+                        </div>
                     </div>
                     
                     <div class="assessment">
@@ -932,10 +940,339 @@
             container.classList.add('active');
         }
 
-        // ============ PDF EXPORT ============
+        // ============ PDF EXPORT / PRINT ============
         function exportPDF() {
-            alert('Función de exportar PDF - Próximamente');
-            // Aquí puedes implementar la generación de PDF con jsPDF
+            printResults('search');
+        }
+
+        function printResults(tab) {
+            // Crear ventana de impresión
+            const printWindow = window.open('', '_blank');
+            
+            let content = '';
+            let title = '';
+            
+            if (tab === 'search') {
+                title = 'Revolución Solar - Ranking de Ciudades';
+                const sunInfo = document.getElementById('sun-natal').textContent;
+                const resultsTitle = document.getElementById('results-title').textContent;
+                const citiesHTML = document.getElementById('cities-container').innerHTML;
+                
+                content = `
+                    <div class="sun-info">
+                        <div class="label">☉ Tu Sol Natal</div>
+                        <div class="value">${sunInfo}</div>
+                    </div>
+                    <h2 class="results-title">${resultsTitle}</h2>
+                    <div class="cities-container">${citiesHTML}</div>
+                `;
+            } else {
+                title = 'Análisis de Revolución Solar Pasada';
+                content = document.getElementById('results-analyze').innerHTML;
+            }
+            
+            const printHTML = `
+                <!DOCTYPE html>
+                <html lang="es">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>${title}</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+                    <style>
+                        * {
+                            margin: 0;
+                            padding: 0;
+                            box-sizing: border-box;
+                        }
+                        
+                        body {
+                            font-family: 'Inter', sans-serif;
+                            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 50%, #16213e 100%);
+                            min-height: 100vh;
+                            color: #e0e0e0;
+                            padding: 30px;
+                        }
+                        
+                        .header {
+                            text-align: center;
+                            margin-bottom: 30px;
+                        }
+                        
+                        .header h1 {
+                            font-size: 2rem;
+                            font-weight: 700;
+                            background: linear-gradient(90deg, #a855f7, #06b6d4);
+                            -webkit-background-clip: text;
+                            -webkit-text-fill-color: transparent;
+                            background-clip: text;
+                            margin-bottom: 10px;
+                        }
+                        
+                        .header p {
+                            color: #9ca3af;
+                            font-size: 0.9rem;
+                        }
+                        
+                        .sun-info {
+                            background: rgba(30, 30, 50, 0.8);
+                            border: 1px solid rgba(139, 92, 246, 0.3);
+                            border-radius: 12px;
+                            padding: 20px;
+                            text-align: center;
+                            margin-bottom: 20px;
+                        }
+                        
+                        .sun-info .label {
+                            color: #9ca3af;
+                            font-size: 0.85rem;
+                        }
+                        
+                        .sun-info .value {
+                            font-size: 1.3rem;
+                            font-weight: 600;
+                            color: #e0e0e0;
+                            margin-top: 5px;
+                        }
+                        
+                        .results-title {
+                            color: #a78bfa;
+                            font-size: 1.2rem;
+                            font-weight: 600;
+                            margin-bottom: 20px;
+                        }
+                        
+                        .city-card {
+                            background: rgba(30, 30, 50, 0.8);
+                            border: 1px solid rgba(139, 92, 246, 0.2);
+                            border-radius: 12px;
+                            padding: 20px;
+                            margin-bottom: 15px;
+                            page-break-inside: avoid;
+                        }
+                        
+                        .city-card.disqualified {
+                            border-color: rgba(239, 68, 68, 0.3);
+                            opacity: 0.8;
+                        }
+                        
+                        .city-header {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                            margin-bottom: 12px;
+                        }
+                        
+                        .city-name {
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                        }
+                        
+                        .city-medal {
+                            font-size: 1.2rem;
+                        }
+                        
+                        .city-title {
+                            font-size: 1.1rem;
+                            font-weight: 600;
+                            color: #e0e0e0;
+                        }
+                        
+                        .city-subtitle {
+                            font-size: 0.8rem;
+                            color: #9ca3af;
+                            margin-top: 3px;
+                        }
+                        
+                        .city-score {
+                            background: linear-gradient(135deg, #eab308, #f59e0b);
+                            color: #1a1a2e;
+                            padding: 4px 12px;
+                            border-radius: 20px;
+                            font-size: 0.85rem;
+                            font-weight: 600;
+                        }
+                        
+                        .city-score.low {
+                            background: linear-gradient(135deg, #ef4444, #dc2626);
+                            color: white;
+                        }
+                        
+                        .regente-info {
+                            background: rgba(20, 20, 40, 0.5);
+                            border-radius: 8px;
+                            padding: 10px 15px;
+                            margin-bottom: 12px;
+                            font-size: 0.85rem;
+                            color: #9ca3af;
+                        }
+                        
+                        .positions-title {
+                            font-size: 0.8rem;
+                            color: #9ca3af;
+                            margin-bottom: 8px;
+                        }
+                        
+                        .positions-grid {
+                            display: grid;
+                            grid-template-columns: repeat(3, 1fr);
+                            gap: 8px;
+                        }
+                        
+                        .position-item {
+                            font-size: 0.8rem;
+                            color: #9ca3af;
+                        }
+                        
+                        .position-item .planet {
+                            color: #e0e0e0;
+                        }
+                        
+                        .position-item .planet.sol { color: #fbbf24; }
+                        .position-item .planet.marte { color: #ef4444; }
+                        .position-item .planet.venus { color: #34d399; }
+                        .position-item .planet.jupiter { color: #f97316; }
+                        .position-item .planet.saturno { color: #a78bfa; }
+                        
+                        /* Analysis styles */
+                        .analysis-card {
+                            background: rgba(30, 30, 50, 0.8);
+                            border: 1px solid rgba(139, 92, 246, 0.3);
+                            border-radius: 16px;
+                            padding: 25px;
+                            margin-bottom: 20px;
+                        }
+                        
+                        .analysis-header {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            margin-bottom: 20px;
+                            padding-bottom: 15px;
+                            border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+                        }
+                        
+                        .analysis-title {
+                            font-size: 1.3rem;
+                            font-weight: 600;
+                            color: #e0e0e0;
+                        }
+                        
+                        .analysis-score {
+                            font-size: 2rem;
+                            font-weight: 700;
+                            color: #a855f7;
+                        }
+                        
+                        .assessment {
+                            background: rgba(20, 20, 40, 0.5);
+                            border-radius: 12px;
+                            padding: 20px;
+                            margin-bottom: 20px;
+                            text-align: center;
+                        }
+                        
+                        .assessment-text {
+                            font-size: 1.1rem;
+                            font-weight: 500;
+                            color: #e0e0e0;
+                        }
+                        
+                        .interpretation-section {
+                            margin-top: 25px;
+                        }
+                        
+                        .interpretation-title {
+                            font-size: 1rem;
+                            font-weight: 600;
+                            color: #a78bfa;
+                            margin-bottom: 15px;
+                        }
+                        
+                        .interpretation-item {
+                            background: rgba(20, 20, 40, 0.5);
+                            border-radius: 10px;
+                            padding: 15px;
+                            margin-bottom: 12px;
+                            page-break-inside: avoid;
+                        }
+                        
+                        .interpretation-header {
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            margin-bottom: 8px;
+                        }
+                        
+                        .interpretation-planet {
+                            font-weight: 600;
+                            color: #e0e0e0;
+                        }
+                        
+                        .interpretation-house {
+                            background: rgba(139, 92, 246, 0.3);
+                            color: #a78bfa;
+                            padding: 2px 10px;
+                            border-radius: 12px;
+                            font-size: 0.8rem;
+                        }
+                        
+                        .interpretation-text {
+                            font-size: 0.9rem;
+                            color: #9ca3af;
+                            line-height: 1.5;
+                        }
+                        
+                        .footer {
+                            text-align: center;
+                            margin-top: 30px;
+                            padding-top: 20px;
+                            border-top: 1px solid rgba(139, 92, 246, 0.2);
+                            color: #6b7280;
+                            font-size: 0.8rem;
+                        }
+                        
+                        @media print {
+                            body {
+                                background: #0a0a1a !important;
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
+                            }
+                            
+                            .city-card, .analysis-card, .interpretation-item {
+                                page-break-inside: avoid;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Motor de Cálculo Astrocartográfico</h1>
+                        <p>Análisis de alta precisión • Metodología Discepolo</p>
+                    </div>
+                    
+                    ${content}
+                    
+                    <div class="footer">
+                        <p>Generado por Motor de Cálculo Astrocartográfico v5.7.0</p>
+                        <p>${new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
+                    
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                        }
+                    <\/script>
+                </body>
+                </html>
+            `;
+            
+            printWindow.document.write(printHTML);
+            printWindow.document.close();
+        }
+
+        function printAnalysis() {
+            printResults('analyze');
         }
     </script>
 </body>
